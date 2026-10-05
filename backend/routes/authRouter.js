@@ -91,18 +91,18 @@ const resetPasswordLimit = rateLimit({
 
 // ---------- Routes ----------
 
-const userRouter = express.Router();
+const authRouter = express.Router();
 
-userRouter.post("/register", registerLimit, registerUser);
+authRouter.post("/auth/register", registerLimit, registerUser);
 
-userRouter.post("/login", loginLimit, logUser);
+authRouter.post("/auth/login", loginLimit, logUser);
 
-userRouter.post("/verify", verifyLimit, verifyUser);
+authRouter.post("/auth/verify", verifyLimit, verifyUser);
 
-userRouter.post("/resend-email", resendLimit, resendVerificationCode);
+authRouter.post("/auth/resend-email", resendLimit, resendVerificationCode);
 
-userRouter.post("/forgot-password", forgotPasswordLimit, forgotPassword);
+authRouter.post("/auth/forgot-password", forgotPasswordLimit, forgotPassword);
 
-userRouter.post("/reset-password", resetPasswordLimit, resetPassword);
+authRouter.post("/auth/reset-password", resetPasswordLimit, resetPassword);
 
-export default userRouter;
+export default authRouter;

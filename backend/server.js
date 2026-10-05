@@ -3,7 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectDb from "./config/db.js";
 import dns from "dns";
-import userRouter from "./routes/userRouter.js";
+import authRouter from "./routes/authRouter.js";
 const app = express();
 
 dns.setServers(["0.0.0.0", "8.8.8.8"]);
@@ -19,7 +19,7 @@ try {
 app.get("/", (req, res) => {
   res.send("Api is working ✅");
 });
-app.use("/api/user/auth", userRouter);
+app.use("/api/user", authRouter);
 
 const PORT = process.env.PORT || 5000;
 
