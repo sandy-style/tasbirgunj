@@ -23,7 +23,9 @@ const PASSWORD_RESET_COOLDOWN = 15 * DAY;
 
 // Create JWT
 const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "60d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "60d",
+  });
 };
 
 // Validate password strength
@@ -62,17 +64,15 @@ const generateVerificationData = async () => {
 
 const registerUser = async (req, res) => {
   try {
-    let { username, name, email, password } = req.body;
+    let { email, password } = req.body;
 
-    if (!username || !name || !email || !password) {
+    if (!email || !password) {
       return res.json({
         success: false,
         message: "Please complete all required fields correctly.",
       });
     }
 
-    username = username.trim();
-    name = name.trim();
     email = email.trim().toLowerCase();
 
     if (!validator.isEmail(email)) {
@@ -91,10 +91,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const [emailExists, usernameExists] = await Promise.all([
-      userModel.findOne({ email }),
-      userModel.findOne({ username }),
-    ]);
+    const emailExists = await userModel.findOne({ email });
 
     if (emailExists) {
       return res.json({
@@ -103,20 +100,11 @@ const registerUser = async (req, res) => {
       });
     }
 
-    if (usernameExists) {
-      return res.json({
-        success: false,
-        message: "Username already exists.",
-      });
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const { code, hashedCode, expiresAt } = await generateVerificationData();
 
     const newUser = new userModel({
-      name,
-      username,
       email,
       password: hashedPassword,
       verificationCode: hashedCode,
@@ -124,7 +112,7 @@ const registerUser = async (req, res) => {
       unVerifiedExpiresAt: new Date(Date.now() + 7 * DAY),
     });
 
-    // Only start the cooldown if email was actually sent
+    // Only save cooldown after email is successfully sent
     await verificationEmail(email, code);
 
     newUser.lastVerificationEmailAt = new Date();
@@ -137,7 +125,7 @@ const registerUser = async (req, res) => {
       verify: false,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Register error:", error);
 
     return res.json({
       success: false,
@@ -230,11 +218,11 @@ const logUser = async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Welcome ${user.name} to TasbirGunj.`,
+      message: "Login successful.",
       token,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
 
     return res.json({
       success: false,
@@ -319,7 +307,7 @@ const verifyUser = async (req, res) => {
       message: "Email is successfully verified.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Verify email error:", error);
 
     return res.json({
       success: false,
@@ -385,7 +373,7 @@ const resendVerificationCode = async (req, res) => {
       message: "Verification email has been sent.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Resend verification error:", error);
 
     return res.json({
       success: false,
@@ -442,7 +430,7 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Reset-email cooldown
+    // Reset email cooldown
     if (
       user.lastPasswordResetEmailAt &&
       Date.now() - user.lastPasswordResetEmailAt.getTime() <
@@ -487,7 +475,7 @@ const forgotPassword = async (req, res) => {
       message: "Reset email has been sent to your mail.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Forgot password error:", error);
 
     return res.json({
       success: false,
@@ -546,6 +534,7 @@ const resetPassword = async (req, res) => {
         $unset: {
           resetPasswordToken: "",
           resetPasswordTokenExpires: "",
+          lastPasswordResetEmailAt: "",
         },
       },
     );
@@ -555,7 +544,7 @@ const resetPassword = async (req, res) => {
       message: "Password has been successfully reset.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Reset password error:", error);
 
     return res.json({
       success: false,
