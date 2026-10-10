@@ -13,6 +13,10 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    imagePublicId: {
+      type: String,
+      required: true,
+    },
 
     author: {
       type: mongoose.Schema.Types.ObjectId,
