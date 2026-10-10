@@ -33,6 +33,7 @@ app.use("/api/profile", profileRouter);
 app.use("/api/post", postRouter);
 app.use("/api/follow", followRouter);
 app.use("/api/like", likeRouter);
+app.use("/api/comment");
 // Start server
 const startServer = async () => {
   try {
