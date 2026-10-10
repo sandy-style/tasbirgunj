@@ -9,6 +9,8 @@ import connectCloudinary from "./config/cloudinary.js";
 import authRouter from "./routes/authRouter.js";
 import profileRouter from "./routes/profileRouter.js";
 import postRouter from "./routes/postRouter.js";
+import followRouter from "./routes/followRouter.js";
+import likeRouter from "./routes/likeRouter.js";
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.get("/", (req, res) => {
 app.use("/api/user", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/post", postRouter);
+app.use("/api/follow", followRouter);
+app.use("/api/like", likeRouter);
 // Start server
 const startServer = async () => {
   try {
