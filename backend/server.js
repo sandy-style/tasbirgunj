@@ -11,7 +11,7 @@ import profileRouter from "./routes/profileRouter.js";
 import postRouter from "./routes/postRouter.js";
 import followRouter from "./routes/followRouter.js";
 import likeRouter from "./routes/likeRouter.js";
-
+import commentRouter from "./routes/commentRouter.js";
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -33,7 +33,7 @@ app.use("/api/profile", profileRouter);
 app.use("/api/post", postRouter);
 app.use("/api/follow", followRouter);
 app.use("/api/like", likeRouter);
-app.use("/api/comment");
+app.use("/api/comment", commentRouter);
 // Start server
 const startServer = async () => {
   try {

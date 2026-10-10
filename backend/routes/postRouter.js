@@ -6,7 +6,7 @@ import {
   getFeed,
   getPost,
 } from "../controllers/postController.js";
-import upload from "../middleware/multer";
+import upload from "../middleware/multer.js";
 
 const postRouter = express.Router();
 
