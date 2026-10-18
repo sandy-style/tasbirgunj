@@ -6,7 +6,7 @@ const api = axios.create({
     Accept: "application/json",
   },
 });
-
+console.log("API BASE URL:", api.defaults.baseURL);
 // Attach the token in the format expected by your backend.
 api.interceptors.request.use(
   (config) => {
