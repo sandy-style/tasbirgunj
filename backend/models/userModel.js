@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     email: {
       type: String,
       required: true,
@@ -10,9 +16,23 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // Email/password users require a password.
+    // Google-only users can exist without one.
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
+    },
+
+    // Google OAuth identity.
+    // Do not set a default of null: sparse unique indexing
+    // allows multiple users without a Google ID.
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
     },
 
     isVerified: {

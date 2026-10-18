@@ -2,6 +2,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     REGISTER: "/api/user/auth/register",
     LOGIN: "/api/user/auth/login",
+    GOOGLE_LOGIN: "/api/user/auth/google-login",
     VERIFY: "/api/user/auth/verify",
     RESEND_VERIFICATION: "/api/user/auth/resend-email",
     FORGOT_PASSWORD: "/api/user/auth/forgot-password",
@@ -31,8 +32,11 @@ export const API_ENDPOINTS = {
   },
 
   LIKE: {
-    COUNT: (postId) => `/api/like/${postId}/count`,
-    TOGGLE: (postId) => `/api/like/${postId}`,
+    COUNT: (postId) => `/api/like/${encodeURIComponent(postId)}/count`,
+
+    STATUS: (postId) => `/api/like/${encodeURIComponent(postId)}/status`,
+
+    TOGGLE: (postId) => `/api/like/${encodeURIComponent(postId)}`,
   },
 
   COMMENT: {

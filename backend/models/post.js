@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+export const POST_CATEGORIES = [
+  "nature",
+  "mountains",
+  "travel",
+  "wildlife",
+  "culture",
+  "architecture",
+  "people",
+  "street-photography",
+];
+
 const postSchema = new mongoose.Schema(
   {
     caption: {
@@ -13,6 +24,22 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    location: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: "",
+    },
+
+    category: {
+      type: String,
+      required: true,
+      enum: POST_CATEGORIES,
+      lowercase: true,
+      trim: true,
+    },
+
     imagePublicId: {
       type: String,
       required: true,

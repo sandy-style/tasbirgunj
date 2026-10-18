@@ -4,7 +4,9 @@ import validator from "validator";
 import { verificationEmail, passwordResetEmail } from "../config/sendemail.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // ---------- Time constants ----------
 
 const MINUTE = 60 * 1000;
@@ -227,6 +229,123 @@ const logUser = async (req, res) => {
     return res.json({
       success: false,
       message: "Something went wrong. Please try again later.",
+    });
+  }
+};
+
+// ---------GOOGLE LOGIN----------
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body ?? {};
+
+    if (!credential || typeof credential !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential is required.",
+      });
+    }
+
+    // Verify the Google ID token on the server.
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload?.email || payload.email_verified !== true) {
+      return res.status(401).json({
+        success: false,
+        message: "Google account must have a verified email.",
+      });
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email.trim().toLowerCase();
+    const googleName = payload.name?.trim() || "";
+
+    // Look up the exact Google identity first.
+    let user = await userModel.findOne({ googleId });
+
+    if (user) {
+      if (user.email?.toLowerCase() !== email) {
+        const emailOwner = await userModel.findOne({ email });
+
+        if (emailOwner && String(emailOwner._id) !== String(user._id)) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This Google email belongs to another account. Please contact support.",
+          });
+        }
+
+        user.email = email;
+      }
+    } else {
+      // Check for an existing account with this verified email.
+      user = await userModel.findOne({ email });
+
+      if (user) {
+        // Never replace a different Google identity already linked.
+        if (user.googleId && user.googleId !== googleId) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "A different Google account is already linked to this email.",
+          });
+        }
+
+        // Link the Google identity to the existing account.
+        // This policy relies on Google's verified email claim.
+        user.googleId = googleId;
+
+        // Preserve a name the user has already chosen.
+        if (!user.name && googleName) {
+          user.name = googleName;
+        }
+      } else {
+        // Create a new Google account.
+        user = new userModel({
+          email,
+          name: googleName,
+          password: null,
+          googleId,
+          isVerified: true,
+          verificationCode: null,
+          verificationCodeExpires: null,
+          unVerifiedExpiresAt: null,
+        });
+      }
+    }
+
+    // Google has confirmed that this email is verified.
+    user.isVerified = true;
+
+    // Clear pending email-verification state.
+    user.verificationCode = null;
+    user.verificationCodeExpires = null;
+    user.lastVerificationEmailAt = null;
+    user.unVerifiedExpiresAt = null;
+
+    await user.save();
+
+    // Issue the same JWT used by email/password authentication.
+    const token = createToken(user._id);
+
+    return res.status(200).json({
+      success: true,
+      token,
+      name: user.name || googleName,
+      email: user.email,
+      message: "Successfully logged in with Google.",
+    });
+  } catch (error) {
+    // Log the error for debugging, but never log the credential itself.
+    console.error("Google login error:", error.message);
+
+    return res.status(401).json({
+      success: false,
+      message: "Google authentication failed. Please try again.",
     });
   }
 };
@@ -560,4 +679,5 @@ export {
   resendVerificationCode,
   forgotPassword,
   resetPassword,
+  googleLogin,
 };

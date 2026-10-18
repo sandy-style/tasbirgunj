@@ -1,12 +1,16 @@
-import postModel from "../models/post.js";
+import mongoose from "mongoose";
+import postModel, { POST_CATEGORIES } from "../models/post.js";
 import profileModel from "../models/profile.js";
 import { v2 as cloudinary } from "cloudinary";
+
+/* -------------------------------------------------------
+   CREATE POST
+------------------------------------------------------- */
 
 const createPost = async (req, res) => {
   let uploadedImagePublicId = null;
 
   try {
-    // 1. Get authenticated user's ID
     const userId = req.user?.id;
 
     if (!userId) {
@@ -16,8 +20,10 @@ const createPost = async (req, res) => {
       });
     }
 
-    // 2. Check whether the user has a profile
-    const profile = await profileModel.findOne({ user: userId });
+    // A user must have a profile before creating posts.
+    const profile = await profileModel.findOne({
+      user: userId,
+    });
 
     if (!profile) {
       return res.status(403).json({
@@ -26,7 +32,6 @@ const createPost = async (req, res) => {
       });
     }
 
-    // 3. Validate caption
     const caption =
       typeof req.body.caption === "string" ? req.body.caption.trim() : "";
 
@@ -37,7 +42,31 @@ const createPost = async (req, res) => {
       });
     }
 
-    // 4. Validate uploaded image
+    // Category is required and must be from the allowed list.
+    const category =
+      typeof req.body.category === "string"
+        ? req.body.category.trim().toLowerCase()
+        : "";
+
+    if (!POST_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select a valid post category.",
+        allowedCategories: POST_CATEGORIES,
+      });
+    }
+
+    // Location is optional.
+    const location =
+      typeof req.body.location === "string" ? req.body.location.trim() : "";
+
+    if (location.length > 120) {
+      return res.status(400).json({
+        success: false,
+        message: "Location cannot exceed 120 characters.",
+      });
+    }
+
     const image = req.files?.image?.[0];
 
     if (!image) {
@@ -47,7 +76,7 @@ const createPost = async (req, res) => {
       });
     }
 
-    // 5. Upload image to Cloudinary
+    // Upload image to Cloudinary.
     const uploadResult = await cloudinary.uploader.upload(image.path, {
       resource_type: "image",
       folder: "tasbirgunj/posts",
@@ -56,27 +85,33 @@ const createPost = async (req, res) => {
     const imageUrl = uploadResult.secure_url;
     uploadedImagePublicId = uploadResult.public_id;
 
-    // 6. Save post to MongoDB
+    // Save the post with its category and optional location.
     const post = await postModel.create({
       caption,
       image: imageUrl,
       imagePublicId: uploadedImagePublicId,
+      location,
+      category,
       author: userId,
     });
 
-    // The database now owns the reference to this uploaded image.
+    // MongoDB now references the uploaded image.
     uploadedImagePublicId = null;
 
-    // 7. Return successful response
     return res.status(201).json({
       success: true,
       message: "Post created successfully.",
       post,
+      authorData: {
+        name: profile.name || "",
+        username: profile.username || "",
+        profileImage: profile.profileImage || "",
+      },
     });
   } catch (error) {
     console.error("Create post error:", error);
 
-    // Clean up the uploaded image if saving the post failed.
+    // Clean up an uploaded image if saving the post failed.
     if (uploadedImagePublicId) {
       try {
         await cloudinary.uploader.destroy(uploadedImagePublicId, {
@@ -94,11 +129,14 @@ const createPost = async (req, res) => {
   }
 };
 
+/* -------------------------------------------------------
+   GET SINGLE POST WITH UPLOADER PROFILE
+------------------------------------------------------- */
+
 const getPost = async (req, res) => {
   try {
     const { postId } = req.params;
 
-    // Validate post ID
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       return res.status(400).json({
         success: false,
@@ -106,8 +144,7 @@ const getPost = async (req, res) => {
       });
     }
 
-    // Find post
-    const post = await postModel.findById(postId);
+    const post = await postModel.findById(postId).lean();
 
     if (!post) {
       return res.status(404).json({
@@ -116,14 +153,15 @@ const getPost = async (req, res) => {
       });
     }
 
-    // Fetch only the required profile fields
     const authorData = await profileModel
       .findOne({ user: post.author })
-      .select("username name profileImage -_id");
+      .select("user username name profileImage -_id")
+      .lean();
+
     return res.status(200).json({
       success: true,
       post,
-      authorData,
+      authorData: authorData || null,
     });
   } catch (error) {
     console.error("Get post error:", error);
@@ -135,28 +173,70 @@ const getPost = async (req, res) => {
   }
 };
 
+/* -------------------------------------------------------
+   GET FEED WITH UPLOADER INFORMATION AND PAGINATION
+------------------------------------------------------- */
+
 const getFeed = async (req, res) => {
   try {
-    // Pagination
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+
     const limit = Math.min(
       30,
       Math.max(1, parseInt(req.query.limit, 10) || 10),
     );
+
     const skip = (page - 1) * limit;
 
-    // Fetch posts, newest first
+    // Category and location are included.
+    // Do not expose the Cloudinary public ID.
     const posts = await postModel
       .find({})
-      .select("-author -imagePublicId")
+      .select("-imagePublicId")
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
+    const authorIds = [
+      ...new Set(
+        posts
+          .map((post) => post.author?.toString())
+          .filter((id) => id && mongoose.Types.ObjectId.isValid(id)),
+      ),
+    ];
+
+    const profiles = authorIds.length
+      ? await profileModel
+          .find({
+            user: { $in: authorIds },
+          })
+          .select("user username name profileImage -_id")
+          .lean()
+      : [];
+
+    const profileMap = new Map(
+      profiles.map((profile) => [String(profile.user), profile]),
+    );
+
+    const enrichedPosts = posts.map((post) => {
+      const authorId = String(post.author || "");
+      const profile = profileMap.get(authorId);
+
+      return {
+        ...post,
+        author: {
+          _id: authorId,
+          name: profile?.name || profile?.username || "Photographer",
+          username: profile?.username || "",
+          profileImage: profile?.profileImage || "",
+        },
+      };
+    });
+
     return res.status(200).json({
       success: true,
-      posts,
+      posts: enrichedPosts,
       pagination: {
         page,
         limit,
@@ -172,9 +252,13 @@ const getFeed = async (req, res) => {
     });
   }
 };
+
+/* -------------------------------------------------------
+   DELETE POST
+------------------------------------------------------- */
+
 const deletePost = async (req, res) => {
   try {
-    // 1. Check authentication
     const userId = req.user?.id;
 
     if (!userId) {
@@ -184,7 +268,6 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // 2. Get the post ID from the route parameters
     const { postId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(postId)) {
@@ -194,7 +277,6 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // 3. Find the post and verify ownership
     const post = await postModel.findOne({
       _id: postId,
       author: userId,
@@ -207,10 +289,8 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // 4. Delete the post from MongoDB
     await postModel.deleteOne({ _id: post._id });
 
-    // 5. Delete its image from Cloudinary
     if (post.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(post.imagePublicId, {
@@ -221,7 +301,6 @@ const deletePost = async (req, res) => {
       }
     }
 
-    // 6. Return success
     return res.status(200).json({
       success: true,
       message: "Post deleted successfully.",

@@ -1,1 +1,1264 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Mukta:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Rozha+One&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap");
 @import "tailwindcss";
+
+/* ==========================================================
+   1. DESIGN TOKENS — LIGHT THEME
+========================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Brand palette */
+  --tg-gold: #426D65;
+  --tg-terracotta: #527F78;
+  --tg-gurans: #C45B54;
+  --tg-lake-teal: #527F78;
+
+  /* Interactive accent */
+  --tg-accent: #426D65;
+  --tg-accent-rgb: 66, 109, 101;
+  --tg-accent-hover: #355B54;
+  --tg-accent-soft: rgba(66, 109, 101, 0.08);
+  --tg-accent-border: rgba(66, 109, 101, 0.24);
+  --tg-focus-ring: rgba(66, 109, 101, 0.35);
+
+  /* Canvas and surfaces */
+  --tg-background: #F5F6F2;
+  --tg-surface: #FFFFFF;
+  --tg-surface-raised: #EEF1EC;
+  --tg-surface-sunken: #ECEFEA;
+  --tg-glass: rgba(245, 246, 242, 0.90);
+  --tg-glass-strong: rgba(255, 255, 255, 0.98);
+
+  /* Text */
+  --tg-text-primary: #202927;
+  --tg-text-secondary: #46534E;
+  --tg-text-muted: #77817C;
+  --tg-text-inverse: #FFFFFF;
+
+  /* Borders */
+  --tg-border-subtle: rgba(32, 41, 39, 0.07);
+  --tg-border: #DCE4DF;
+  --tg-border-strong: #C6D2CB;
+  --tg-glass-border: rgba(32, 41, 39, 0.09);
+
+  /* Shadows */
+  --tg-shadow-sm: 0 2px 8px rgba(24, 37, 32, 0.04);
+  --tg-shadow-md: 0 8px 24px rgba(24, 37, 32, 0.06);
+  --tg-shadow-lg: 0 16px 40px rgba(24, 37, 32, 0.09);
+  --tg-shadow-xl: 0 24px 60px rgba(24, 37, 32, 0.13);
+
+  /* Typography */
+  --tg-font-brand: "Rozha One", "Noto Serif Devanagari", serif;
+  --tg-font-editorial: "Cormorant Garamond", "Noto Serif Devanagari", Georgia, serif;
+  --tg-font-body: "Plus Jakarta Sans", "Mukta", sans-serif;
+  --tg-font-nepali: "Mukta", "Noto Serif Devanagari", sans-serif;
+  --tg-font-metadata: "Space Grotesk", monospace;
+
+  /* Layout */
+  --tg-content-width: 1440px;
+  --tg-page-padding: clamp(1rem, 4vw, 3.5rem);
+
+
+  /* Shape */
+  --tg-radius-sm: 0.5rem;
+  --tg-radius-md: 0.75rem;
+  --tg-radius-lg: 1rem;
+  --tg-radius-xl: 1.5rem;
+  --tg-radius-2xl: 2rem;
+  --tg-radius-pill: 999px;
+
+  /* Motion */
+  --tg-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --tg-transition-theme:
+    color 240ms ease,
+    background-color 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+
+  font-family: var(--tg-font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================
+   2. DESIGN TOKENS — DARK THEME
+========================================================== */
+
+:root.dark,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Interactive accent */
+  --tg-accent: #8DBBB1;
+  --tg-accent-rgb: 141, 187, 177;
+  --tg-accent-hover: #A5CEC4;
+  --tg-accent-soft: rgba(141, 187, 177, 0.10);
+  --tg-accent-border: rgba(141, 187, 177, 0.25);
+  --tg-focus-ring: rgba(141, 187, 177, 0.40);
+
+  /* Canvas and surfaces */
+  --tg-background: #101718;
+  --tg-surface: #182122;
+  --tg-surface-raised: #202B2C;
+  --tg-surface-sunken: #0D1314;
+  --tg-glass: rgba(16, 23, 24, 0.90);
+  --tg-glass-strong: rgba(24, 33, 34, 0.98);
+
+  /* Text */
+  --tg-text-primary: #E9EFEB;
+  --tg-text-secondary: #C1CDC7;
+  --tg-text-muted: #94A49D;
+  --tg-text-inverse: #101718;
+
+  /* Borders */
+  --tg-border-subtle: rgba(255, 255, 255, 0.07);
+  --tg-border: rgba(255, 255, 255, 0.10);
+  --tg-border-strong: rgba(255, 255, 255, 0.17);
+  --tg-glass-border: rgba(255, 255, 255, 0.09);
+
+  /* Shadows */
+  --tg-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.16);
+  --tg-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.20);
+  --tg-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.30);
+  --tg-shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.42);
+}
+
+/* Explicit light-theme override */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --tg-gold: #426D65;
+  --tg-terracotta: #527F78;
+  --tg-accent: #426D65;
+  --tg-accent-rgb: 66, 109, 101;
+  --tg-accent-hover: #355B54;
+  --tg-accent-soft: rgba(66, 109, 101, 0.08);
+  --tg-accent-border: rgba(66, 109, 101, 0.24);
+  --tg-focus-ring: rgba(66, 109, 101, 0.35);
+
+  --tg-background: #F5F6F2;
+  --tg-surface: #FFFFFF;
+  --tg-surface-raised: #EEF1EC;
+  --tg-surface-sunken: #ECEFEA;
+  --tg-glass: rgba(245, 246, 242, 0.90);
+  --tg-glass-strong: rgba(255, 255, 255, 0.98);
+
+  --tg-text-primary: #202927;
+  --tg-text-secondary: #46534E;
+  --tg-text-muted: #77817C;
+  --tg-text-inverse: #FFFFFF;
+
+  --tg-border-subtle: rgba(32, 41, 39, 0.07);
+  --tg-border: #DCE4DF;
+  --tg-border-strong: #C6D2CB;
+  --tg-glass-border: rgba(32, 41, 39, 0.09);
+}
+
+/* ==========================================================
+   3. GLOBAL RESET AND BASE STYLES
+========================================================== */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--tg-navbar-height) + 1rem);
+    background: var(--tg-background);
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--tg-background);
+    color: var(--tg-text-primary);
+    font-family: var(--tg-font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    transition: var(--tg-transition-theme);
+  }
+
+  #root {
+    min-height: 100vh;
+    isolation: isolate;
+    background: var(--tg-background);
+    color: var(--tg-text-primary);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    color: var(--tg-text-primary);
+    font-family: var(--tg-font-editorial);
+    font-weight: 600;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+  }
+
+  h2 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  }
+
+  p {
+    margin: 0;
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    color: inherit;
+  }
+
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  img {
+    height: auto;
+  }
+
+  ::selection {
+    color: var(--tg-text-primary);
+    background: rgba(var(--tg-accent-rgb), 0.24);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--tg-focus-ring);
+    outline-offset: 3px;
+  }
+
+  :where(input, textarea, select):focus-visible {
+    border-color: var(--tg-accent);
+    box-shadow: 0 0 0 3px var(--tg-focus-ring);
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--tg-text-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--tg-text-muted);
+    opacity: 0.85;
+  }
+}
+
+/* ==========================================================
+   4. TYPOGRAPHY UTILITIES
+========================================================== */
+
+@layer utilities {
+  .tg-type-brand {
+    font-family: var(--tg-font-brand);
+  }
+
+  .tg-type-editorial {
+    font-family: var(--tg-font-editorial);
+  }
+
+  .tg-type-body {
+    font-family: var(--tg-font-body);
+  }
+
+  .tg-type-nepali,
+  :lang(ne) {
+    font-family: var(--tg-font-nepali);
+  }
+
+  .tg-type-meta {
+    font-family: var(--tg-font-metadata);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.12em;
+  }
+
+  .tg-text-muted {
+    color: var(--tg-text-muted);
+  }
+
+  .tg-text-secondary {
+    color: var(--tg-text-secondary);
+  }
+
+  .tg-text-accent {
+    color: var(--tg-accent);
+  }
+
+  .tg-text-balance {
+    text-wrap: balance;
+  }
+
+  .tg-content-width {
+    width: min(
+      calc(100% - var(--tg-page-padding) * 2),
+      var(--tg-content-width)
+    );
+    margin-inline: auto;
+  }
+
+  .tg-transition-theme {
+    transition: var(--tg-transition-theme);
+  }
+}
+
+/* ==========================================================
+   5. BRAND WORDMARK — तस्बिरगंज
+========================================================== */
+
+.tg-brand-wordmark {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: var(--tg-font-brand);
+  font-size: clamp(1.55rem, 2vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+
+  background: linear-gradient(
+    115deg,
+    #426D65 0%,
+    #527F78 55%,
+    #71978E 100%
+  );
+
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  transition: filter 250ms ease, transform 250ms var(--tg-ease);
+}
+
+:root.dark .tg-brand-wordmark,
+:root[data-theme="dark"] .tg-brand-wordmark {
+  background-image: linear-gradient(
+    115deg,
+    #A5CEC4 0%,
+    #8DBBB1 55%,
+    #6D9E95 100%
+  );
+  filter: none;
+}
+
+.tg-brand-link:hover .tg-brand-wordmark {
+  filter: drop-shadow(
+    0 2px 8px rgba(var(--tg-accent-rgb), 0.2)
+  );
+}
+
+/* ==========================================================
+   6. NAVIGATION
+========================================================== */
+
+.tg-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  min-height: 0;
+  padding: 0 !important;
+  color: var(--tg-text-primary);
+  background: var(--tg-glass);
+  border-bottom: 1px solid var(--tg-border-subtle);
+  box-shadow: var(--tg-shadow-sm);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  transition: var(--tg-transition-theme);
+}
+
+.tg-navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(
+    calc(100% - var(--tg-page-padding) * 2),
+    var(--tg-content-width)
+  );
+  height: calc(var(--tg-navbar-height) - 1px);
+  min-height: calc(var(--tg-navbar-height) - 1px);
+  margin-inline: auto;
+  padding-block: 0 !important;
+}
+
+.tg-nav-links,
+.tg-navbar-desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tg-navbar-desktop-links {
+  display: none;
+}
+
+.tg-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--tg-radius-pill);
+  color: var(--tg-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.tg-nav-link:hover {
+  color: var(--tg-accent);
+  background: var(--tg-accent-soft);
+}
+
+.tg-nav-link[aria-current="page"],
+.tg-nav-link.is-active {
+  color: var(--tg-accent);
+  background: var(--tg-accent-soft);
+  border-color: var(--tg-accent-border);
+}
+
+.tg-nav-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--tg-radius-pill);
+  background: var(--tg-accent);
+  color: var(--tg-text-inverse);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 5px 18px rgba(var(--tg-accent-rgb), 0.16);
+  transition:
+    transform 220ms var(--tg-ease),
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.tg-nav-action:hover {
+  transform: translateY(-1px);
+  background: var(--tg-accent-hover);
+  box-shadow: 0 8px 24px rgba(var(--tg-accent-rgb), 0.24);
+}
+
+.tg-nav-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border: 1px solid var(--tg-border);
+  border-radius: 50%;
+  background: var(--tg-surface);
+  color: var(--tg-text-primary);
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+
+.tg-nav-icon-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--tg-accent-border);
+  background: var(--tg-accent-soft);
+  color: var(--tg-accent);
+}
+
+.tg-mobile-menu {
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-xl);
+  background: var(--tg-glass-strong);
+  color: var(--tg-text-primary);
+  box-shadow: var(--tg-shadow-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+@media (min-width: 1024px) {
+  .tg-navbar-desktop-links {
+    display: flex;
+  }
+}
+
+/* ==========================================================
+   7. SURFACES AND GLASS EFFECTS
+========================================================== */
+
+.tg-surface {
+  border: 1px solid var(--tg-border-subtle);
+  border-radius: var(--tg-radius-xl);
+  background: var(--tg-surface);
+  box-shadow: var(--tg-shadow-md);
+  transition:
+    background-color 240ms ease,
+    border-color 240ms ease,
+    box-shadow 250ms ease,
+    transform 250ms var(--tg-ease);
+}
+
+.tg-surface-raised {
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-xl);
+  background: var(--tg-surface-raised);
+  box-shadow: var(--tg-shadow-lg);
+}
+
+.tg-glass-panel {
+  border: 1px solid var(--tg-glass-border);
+  border-radius: var(--tg-radius-xl);
+  background: var(--tg-glass);
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+}
+
+.tg-divider {
+  width: 100%;
+  height: 1px;
+  border: 0;
+  background: var(--tg-border);
+}
+
+/* ==========================================================
+   8. BUTTONS
+========================================================== */
+
+.tg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 2.8rem;
+  padding: 0.75rem 1.15rem;
+  border: 1px solid transparent;
+  border-radius: var(--tg-radius-pill);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 220ms ease,
+    transform 220ms var(--tg-ease);
+}
+
+.tg-button-primary {
+  background: var(--tg-accent);
+  color: var(--tg-text-inverse);
+  box-shadow: 0 5px 18px rgba(var(--tg-accent-rgb), 0.18);
+}
+
+.tg-button-primary:hover {
+  transform: translateY(-2px);
+  background: var(--tg-accent-hover);
+  box-shadow: 0 9px 26px rgba(var(--tg-accent-rgb), 0.25);
+}
+
+.tg-button-secondary {
+  border-color: var(--tg-border);
+  background: var(--tg-surface);
+  color: var(--tg-text-primary);
+}
+
+.tg-button-secondary:hover {
+  transform: translateY(-1px);
+  border-color: var(--tg-accent-border);
+  background: var(--tg-surface-raised);
+}
+
+.tg-button-glass {
+  border-color: var(--tg-glass-border);
+  background: var(--tg-glass);
+  color: var(--tg-text-primary);
+  box-shadow: var(--tg-shadow-md);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.tg-button-glass:hover {
+  transform: translateY(-2px);
+  border-color: var(--tg-accent-border);
+  box-shadow: var(--tg-shadow-lg);
+}
+
+.tg-button:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* ==========================================================
+   9. INPUTS AND FORMS
+========================================================== */
+
+.tg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.tg-field-label {
+  color: var(--tg-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.tg-input,
+.tg-textarea,
+.tg-select {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-md);
+  outline: none;
+  background: var(--tg-surface);
+  color: var(--tg-text-primary);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.tg-textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.tg-input:focus,
+.tg-textarea:focus,
+.tg-select:focus {
+  border-color: var(--tg-accent);
+  box-shadow: 0 0 0 3px var(--tg-focus-ring);
+}
+
+.tg-input::placeholder,
+.tg-textarea::placeholder {
+  color: var(--tg-text-muted);
+  opacity: 0.8;
+}
+
+/* ==========================================================
+   10. PHOTOGRAPHY CARDS
+========================================================== */
+
+.tg-photo-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tg-border-subtle);
+  border-radius: var(--tg-radius-lg);
+  background: var(--tg-surface);
+  box-shadow: var(--tg-shadow-md);
+  transition:
+    transform 350ms var(--tg-ease),
+    border-color 300ms ease,
+    box-shadow 350ms ease;
+}
+
+.tg-photo-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: transform 500ms var(--tg-ease);
+}
+
+.tg-photo-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--tg-accent-border);
+  box-shadow: var(--tg-shadow-lg);
+}
+
+.tg-photo-card:hover img {
+  transform: scale(1.025);
+}
+
+.tg-photo-card-monochrome img {
+  filter: grayscale(100%) contrast(110%);
+  transition:
+    filter 350ms ease,
+    transform 500ms var(--tg-ease);
+}
+
+.tg-photo-card-monochrome:hover img {
+  filter: grayscale(15%) contrast(105%);
+}
+
+.tg-photo-caption {
+  padding: 0.9rem 1rem 1.1rem;
+  color: var(--tg-text-secondary);
+  font-family: var(--tg-font-editorial);
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+/* ==========================================================
+   11. METADATA AND EDITORIAL LABELS
+========================================================== */
+
+.tg-eyebrow {
+  color: var(--tg-text-muted);
+  font-family: var(--tg-font-metadata);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.17em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.tg-metadata {
+  color: var(--tg-text-muted);
+  font-family: var(--tg-font-metadata);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.tg-editorial-quote {
+  color: var(--tg-text-primary);
+  font-family: var(--tg-font-editorial);
+  font-size: clamp(1.6rem, 3vw, 2.7rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* ==========================================================
+   12. BADGES
+========================================================== */
+
+.tg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-pill);
+  background: var(--tg-surface-raised);
+  color: var(--tg-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.tg-badge-accent {
+  border-color: var(--tg-accent-border);
+  background: var(--tg-accent-soft);
+  color: var(--tg-accent);
+}
+
+/* ==========================================================
+   13. SCROLLBARS
+========================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--tg-accent-rgb), 0.55) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(var(--tg-accent-rgb), 0.48);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--tg-accent-rgb), 0.75);
+  background-clip: padding-box;
+}
+
+/* ==========================================================
+   14. NAVBAR COMPONENT STYLES
+========================================================== */
+
+.tg-navbar-accent-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--tg-accent) 50%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+.tg-brand-link {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.tg-brand-symbol {
+  display: none;
+}
+
+.tg-avatar {
+  display: inline-flex;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--tg-accent-border);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tg-avatar-compact {
+  width: 2rem;
+  height: 2rem;
+}
+
+.tg-avatar-fallback {
+  background: linear-gradient(135deg, #426D65, #71978E);
+  color: #FFFFFF;
+  font-family: var(--tg-font-editorial);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+:root.dark .tg-avatar-fallback,
+:root[data-theme="dark"] .tg-avatar-fallback {
+  background: linear-gradient(135deg, #355B54, #8DBBB1);
+  color: #101718;
+}
+
+.tg-profile-trigger {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.3rem;
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-pill);
+  background: var(--tg-surface);
+  color: var(--tg-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.tg-profile-trigger:hover,
+.tg-profile-trigger[aria-expanded="true"] {
+  border-color: var(--tg-accent-border);
+  background: var(--tg-accent-soft);
+  color: var(--tg-text-primary);
+}
+
+.tg-profile-menu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 60;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--tg-border);
+  border-radius: 1.25rem;
+  background: var(--tg-glass-strong);
+  color: var(--tg-text-primary);
+  box-shadow: var(--tg-shadow-xl);
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  animation: tg-menu-enter 180ms var(--tg-ease) both;
+}
+
+.tg-profile-menu-header {
+  padding: 0.8rem 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--tg-border-subtle);
+}
+
+.tg-profile-menu-item {
+  display: flex;
+  width: 100%;
+  min-height: 2.7rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.75rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--tg-text-secondary);
+  font-size: 0.875rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.tg-profile-menu-item:hover {
+  background: var(--tg-accent-soft);
+  color: var(--tg-accent);
+}
+
+.tg-profile-menu-logout {
+  color: var(--tg-gurans);
+}
+
+:root.dark .tg-profile-menu-logout,
+:root[data-theme="dark"] .tg-profile-menu-logout {
+  color: #F28B82;
+}
+
+.tg-profile-menu-logout:hover {
+  background: rgba(196, 91, 84, 0.10);
+  color: var(--tg-gurans);
+}
+
+/* ==========================================================
+   15. MOBILE AND TABLET NAVIGATION
+========================================================== */
+
+.tg-mobile-navigation {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  border-top: 1px solid transparent;
+  transition:
+    grid-template-rows 280ms var(--tg-ease),
+    opacity 200ms ease,
+    visibility 200ms ease,
+    border-color 200ms ease;
+}
+
+.tg-mobile-navigation.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  border-top-color: var(--tg-border-subtle);
+}
+
+.tg-mobile-navigation > .tg-mobile-menu {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tg-mobile-menu {
+  width: min(calc(100% - 2rem), var(--tg-content-width));
+  margin-inline: auto;
+  padding-block: 0.85rem 1rem;
+}
+
+.tg-mobile-nav-link {
+  display: flex;
+  min-height: 2.65rem;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--tg-border-subtle);
+  border-radius: var(--tg-radius-md);
+  background: var(--tg-surface);
+  color: var(--tg-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.tg-mobile-nav-link:hover,
+.tg-mobile-nav-link.is-active {
+  border-color: var(--tg-accent-border);
+  background: var(--tg-accent-soft);
+  color: var(--tg-accent);
+}
+
+.tg-mobile-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-lg);
+  background: var(--tg-surface);
+}
+
+.tg-mobile-profile-link {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--tg-text-primary);
+  text-decoration: none;
+}
+
+.tg-mobile-logout {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: var(--tg-radius-md);
+  background: transparent;
+  color: var(--tg-gurans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tg-mobile-logout:hover {
+  background: rgba(196, 91, 84, 0.09);
+}
+
+.tg-mobile-join {
+  display: flex;
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.tg-mobile-create {
+  display: flex;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+/* ==========================================================
+   16. HOME PAGE — EDITORIAL INTERACTION
+========================================================== */
+
+.tg-home-explore {
+  border-color: var(--tg-border-strong);
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease,
+    transform 300ms ease;
+}
+
+.tg-home-explore:hover {
+  box-shadow: var(--tg-shadow-lg);
+}
+
+:root.dark .tg-home-explore:hover,
+:root[data-theme="dark"] .tg-home-explore:hover {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 0 24px rgba(141, 187, 177, 0.08);
+}
+
+/* ==========================================================
+   17. RESPONSIVE ADJUSTMENTS
+========================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --tg-navbar-height: 57px;
+    --tg-page-padding: 1.25rem;
+  }
+
+  .tg-nav-links {
+    gap: 0.15rem;
+  }
+
+  .tg-nav-link {
+    padding: 0.5rem 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tg-navbar-height: 55px;
+    --tg-page-padding: 1rem;
+  }
+
+  .tg-brand-wordmark {
+    font-size: 1.45rem;
+  }
+
+  .tg-button {
+    min-height: 2.65rem;
+    padding: 0.7rem 0.95rem;
+  }
+
+  .tg-brand-link {
+    gap: 0;
+  }
+
+  .tg-mobile-menu {
+    padding-block: 0.85rem 1rem;
+  }
+}
+
+/* ==========================================================
+   18. ACCESSIBILITY AND REDUCED MOTION
+========================================================== */
+
+@keyframes tg-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .tg-profile-menu {
+    animation: none;
+  }
+}
+
+/* ==========================================================
+   NAVBAR — PRECISE VERTICAL ALIGNMENT
+========================================================== */
+
+/* ==========================================================
+   TASBIRGANJ — TOAST NOTIFICATIONS
+========================================================== */
+
+.Toastify__toast-container {
+  z-index: 9999;
+  width: min(380px, calc(100vw - 24px));
+  padding: 12px;
+  font-family: var(--tg-font-body);
+}
+
+.Toastify__toast {
+  min-height: 64px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+
+  border: 1px solid var(--tg-border);
+  border-radius: var(--tg-radius-lg);
+
+  background: var(--tg-glass-strong);
+  color: var(--tg-text-primary);
+  box-shadow: var(--tg-shadow-lg);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.Toastify__toast-body {
+  padding: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.Toastify__toast-icon {
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.Toastify__close-button {
+  color: var(--tg-text-muted);
+  opacity: 0.8;
+}
+
+.Toastify__close-button:hover {
+  color: var(--tg-text-primary);
+  opacity: 1;
+}
+
+.Toastify__progress-bar {
+  height: 3px;
+  background: var(--tg-accent);
+}
+
+:root.dark .Toastify__toast,
+:root[data-theme="dark"] .Toastify__toast {
+  border-color: var(--tg-border);
+  background: var(--tg-surface-raised);
+  color: var(--tg-text-primary);
+}

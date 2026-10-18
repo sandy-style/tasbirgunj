@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-import coverImage from "../assets/tasbirgunj-cover.png";
-import himalayas from "../assets/himalayas.png";
-// High-resolution fallback cover in case the local asset is missing or resolving
-const FALLBACK_COVER =
-  "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=2400&q=85";
+import { motion, useReducedMotion } from "framer-motion";
 
-// Curated photography frames with distinct right-anchored offsets and metadata
+import coverImage from "../assets/tasbirgunj-cover.png";
+import About from "./About";
+
+const HERO_IMAGES = [
+  coverImage,
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2400&q=90",
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2400&q=90",
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2400&q=90",
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=2400&q=90",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=90",
+];
+const deva = "font-['Rozha_One','Noto_Serif_Devanagari',serif]";
 const sceneryCards = [
   {
     id: "01",
@@ -17,8 +24,8 @@ const sceneryCards = [
     image:
       "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=85",
     top: "3%",
-    rightOffset: "12px",
-    angle: "-5deg",
+    right: "12px",
+    angle: -5,
   },
   {
     id: "02",
@@ -28,8 +35,8 @@ const sceneryCards = [
     image:
       "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=85",
     top: "21%",
-    rightOffset: "36px",
-    angle: "4deg",
+    right: "36px",
+    angle: 4,
   },
   {
     id: "03",
@@ -39,8 +46,8 @@ const sceneryCards = [
     image:
       "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=85",
     top: "39%",
-    rightOffset: "16px",
-    angle: "-3deg",
+    right: "16px",
+    angle: -3,
   },
   {
     id: "04",
@@ -50,8 +57,8 @@ const sceneryCards = [
     image:
       "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800&q=85",
     top: "57%",
-    rightOffset: "40px",
-    angle: "5deg",
+    right: "40px",
+    angle: 5,
   },
   {
     id: "05",
@@ -61,383 +68,391 @@ const sceneryCards = [
     image:
       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=85",
     top: "75%",
-    rightOffset: "20px",
-    angle: "-4deg",
+    right: "20px",
+    angle: -4,
   },
 ];
 
+const heroContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.13,
+    },
+  },
+};
+const gradientText =
+  "bg-gradient-to-r from-[#AD081B] via-[#E60023] to-[#F05B70] bg-clip-text text-transparent";
+const heroItemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 18,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
 export default function Home() {
+  const reduceMotion = useReducedMotion();
+  const shouldReduceMotion = reduceMotion ?? false;
+
   const [loaded, setLoaded] = useState(false);
+  const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoaded(true), 100);
-    return () => window.clearTimeout(timer);
-  }, []);
+    const entranceTimer = window.setTimeout(() => {
+      setLoaded(true);
+    }, 100);
+
+    // Preload the hero images for smoother cross-fades.
+    HERO_IMAGES.forEach((src) => {
+      const image = new Image();
+      image.src = src;
+    });
+
+    const backgroundTimer = shouldReduceMotion
+      ? null
+      : window.setInterval(() => {
+          setBackgroundIndex((current) => (current + 1) % HERO_IMAGES.length);
+        }, 7000);
+
+    return () => {
+      window.clearTimeout(entranceTimer);
+
+      if (backgroundTimer !== null) {
+        window.clearInterval(backgroundTimer);
+      }
+    };
+  }, [shouldReduceMotion]);
+
+  const copyVariants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 1, y: 0 },
+        visible: { opacity: 1, y: 0 },
+      }
+    : heroItemVariants;
 
   return (
-    <main
-      className={`relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-[#181d1e] text-white select-none ${
-        loaded ? "hero-loaded" : ""
-      }`}
-    >
-      <style>{`
-        @keyframes heroFade {
-          from {
-            opacity: 0;
-            transform: translateY(18px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+    <>
+      <main className="w-full overflow-hidden bg-white font-['Plus_Jakarta_Sans',sans-serif] text-[#111111]">
+        {/* Hero */}
+        <section
+          id="home"
+          aria-label="तस्बिरगंज introduction"
+          className="relative isolate h-[100svh] min-h-[700px] w-full overflow-hidden bg-white sm:min-h-[640px]"
+        >
+          {/* Cross-fading hero backgrounds */}
+          <div className="absolute inset-0 z-0 overflow-hidden bg-[#F7F7F7]">
+            {HERO_IMAGES.map((image, index) => (
+              <motion.img
+                key={image}
+                src={image}
+                alt=""
+                aria-hidden="true"
+                fetchPriority={index === backgroundIndex ? "high" : "auto"}
+                loading="eager"
+                decoding="async"
+                initial={false}
+                animate={{
+                  opacity: index === backgroundIndex ? 1 : 0,
+                }}
+                transition={{
+                  opacity: {
+                    duration: shouldReduceMotion ? 0 : 2.4,
+                    ease: "easeInOut",
+                  },
+                }}
+                onError={(event) => {
+                  const target = event.currentTarget;
 
-        @keyframes backgroundFade {
-          from { opacity: .6; transform: scale(1.08) translateX(-1%); }
-          to { opacity: 1; transform: scale(1.05) translateX(0); }
-        }
+                  if (target.dataset.fallback === "true") {
+                    target.style.display = "none";
+                    return;
+                  }
 
-        .hero-background {
-          animation: backgroundFade 1.6s ease-out both;
-          transform-origin: center;
-        }
-
-        .hero-copy {
-          opacity: 0;
-        }
-
-        .hero-loaded .hero-copy {
-          animation: heroFade .85s cubic-bezier(.22, 1, .36, 1) forwards;
-        }
-
-        .hero-loaded .copy-one { animation-delay: .12s; }
-        .hero-loaded .copy-two { animation-delay: .25s; }
-        .hero-loaded .copy-three { animation-delay: .4s; }
-        .hero-loaded .copy-four { animation-delay: .55s; }
-
-        /* Photography gallery card styling */
-        .photo-card {
-          opacity: 0;
-          animation: cardEntrance .85s cubic-bezier(.22, 1, .36, 1) var(--delay) forwards;
-          transform-origin: center right;
-          filter: grayscale(1);
-          transition:
-            filter .5s ease,
-            opacity .45s ease,
-            transform .55s cubic-bezier(.22, 1, .36, 1);
-          will-change: transform, filter, opacity;
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        @keyframes cardEntrance {
-          from {
-            opacity: 0;
-            transform: translate3d(24px, 12px, 0);
-          }
-          to {
-            opacity: .82;
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        .photo-card:hover,
-        .photo-card:focus-visible,
-        .photo-card.is-active {
-          filter: grayscale(0);
-          opacity: 1;
-        }
-
-        .photo-card .photo-img {
-          transition: transform .65s cubic-bezier(.22, 1, .36, 1);
-        }
-
-        .photo-card:hover .photo-img,
-        .photo-card:focus-visible .photo-img,
-        .photo-card.is-active .photo-img {
-          transform: scale(1.08);
-        }
-
-        .photo-card:focus-visible {
-          outline: 2px solid #F0C49A;
-          outline-offset: 4px;
-        }
-
-        /* Hide scrollbars on mobile horizontal rail */
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .hero-background,
-          .hero-loaded .hero-copy,
-          .photo-card {
-            animation: none !important;
-            opacity: 1 !important;
-          }
-
-          .photo-card,
-          .photo-card .photo-img {
-            transition: none !important;
-          }
-        }
-          @keyframes mobileCarousel {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc(-50% - 6px));
-  }
-}
-
-.mobile-carousel-track {
-  width: max-content;
-  animation: mobileCarousel 30s linear infinite;
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobile-carousel-track {
-    animation: none;
-  }
-}
-      `}</style>
-      {/* Hero background artwork with high-res fallback */}
-      <img
-        src={coverImage || FALLBACK_COVER}
-        onError={(e) => {
-          e.currentTarget.onerror = null;
-          e.currentTarget.src = FALLBACK_COVER;
-        }}
-        alt="Tasbirgunj photography and Nepali cultural landscape"
-        fetchPriority="high"
-        decoding="async"
-        className="hero-background absolute inset-0 h-full w-full object-cover"
-      />
-      {/* Cinematic gradient overlays for legibility */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#121617]/90 via-[#121617]/55 to-[#121617]/20" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#121617]/80 via-transparent to-[#121617]/25" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#121617]/95 via-[#121617]/50 to-transparent" />
-      {/* Hero copy container */}
-      <section className="relative z-10 flex h-full items-center px-6 sm:px-12 md:px-14 lg:px-[8%] xl:px-[9%]">
-        <div className="w-full max-w-[620px] lg:max-w-[680px] xl:max-w-[760px] -translate-y-8 sm:-translate-y-6 md:-translate-y-4">
-          <p className="hero-copy copy-one mb-4 sm:mb-6 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/75 sm:text-xs">
-            <span className="mr-2 text-[#F0C49A]">●</span>A home for every
-            perspective
-          </p>
-          <h1
-            lang="ne"
-            className="hero-copy copy-two mb-3 sm:mb-5 w-fit max-w-full pb-[0.08em] pr-[0.1em] text-[clamp(3.8rem,9vw,8.2rem)] font-normal leading-[1.18] text-[#FFF9F0]"
-            style={{
-              fontFamily:
-                '"AMS Kashifont", "Tiro Devanagari Nepali", "Noto Serif Devanagari", serif',
-              textShadow: "0 4px 35px rgba(0,0,0,0.35)",
-            }}
-          >
-            तस्बिरगंज
-          </h1>
-          <h2 className="hero-copy copy-three max-w-[580px] font-serif text-[clamp(1.75rem,3.8vw,2.85rem)] leading-[1.15] tracking-[-0.03em] text-[#F8F5EE]">
-            The world, through{" "}
-            <span className="italic text-[#F0C49A]">your lens.</span>
-          </h2>
-          <p className="hero-copy copy-three mt-4 sm:mt-5 max-w-[460px] text-xs leading-6 sm:text-base sm:leading-7 text-white/80">
-            A moment. A feeling. A different perspective. Discover extraordinary
-            photographs and share the world as you see it.
-          </p>
-
-          <div className="hero-copy copy-four mt-7 sm:mt-9">
-            <Link
-              to="/explore"
-              className="group relative inline-flex items-center gap-5 overflow-hidden rounded-2xl border border-white/35 bg-white/[0.10] px-7 py-4 text-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-all duration-500 hover:border-white/60 hover:bg-white/[0.17] hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)] sm:gap-6 sm:px-9 sm:py-5"
-            >
-              {/* Subtle glass highlight */}
-              <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-
-              {/* Elegant text */}
-              <span className="relative flex flex-col items-start gap-1.5">
-                <span
-                  className="text-[23px] leading-tight tracking-wide text-white drop-shadow-sm sm:text-[28px]"
-                  style={{ fontFamily: "'Kalam', cursive" }}
-                >
-                  Explore तस्बिरगंज
-                </span>
-
-                <span
-                  className="text-[9px] font-medium uppercase tracking-[0.24em] text-white/75 sm:text-[10px]"
-                  style={{ fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  A world through the lens
-                </span>
-              </span>
-
-              {/* Small decorative accent */}
-              <span className="relative ml-1 h-8 w-px bg-gradient-to-b from-transparent via-white/60 to-transparent transition-all duration-500 group-hover:via-white sm:h-10" />
-            </Link>
-          </div>
-        </div>
-      </section>
-      {/* ==================================================================== */}
-      {/* DESKTOP & LARGE SCREENS: Farthest Right Vertical Cascading Gallery   */}
-      {/* ==================================================================== */}
-      <aside
-        aria-label="Curated photography gallery"
-        className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden md:block w-[180px] lg:w-[220px] xl:w-[260px] 2xl:w-[280px]"
-        onMouseLeave={() => setHoveredCard(null)}
-      >
-        {sceneryCards.map((card, index) => {
-          const active = hoveredCard === index;
-          const anotherActive = hoveredCard !== null;
-
-          let shiftX = 0;
-          let shiftY = 0;
-          let scale = 1;
-
-          if (anotherActive) {
-            if (active) {
-              shiftX = -40; // Glides inward from the far right edge
-              shiftY = -2;
-              scale = 1.1;
-            } else {
-              shiftX = 12; // Inactive cards step back
-              scale = 0.94;
-            }
-          }
-
-          return (
-            <article
-              key={card.id}
-              role="button"
-              tabIndex={0}
-              aria-label={`${card.title} - ${card.location}`}
-              aria-pressed={active}
-              onMouseEnter={() => setHoveredCard(index)}
-              onFocus={() => setHoveredCard(index)}
-              onBlur={(e) => {
-                if (!e.currentTarget.parentElement?.contains(e.relatedTarget)) {
-                  setHoveredCard(null);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setHoveredCard((current) =>
-                    current === index ? null : index,
-                  );
-                }
-              }}
-              onClick={() =>
-                setHoveredCard((current) => (current === index ? null : index))
-              }
-              className={`photo-card pointer-events-auto absolute cursor-pointer rounded-[11px] sm:rounded-[14px] ${
-                active ? "is-active" : ""
-              } w-[95px] lg:w-[120px] xl:w-[140px] 2xl:w-[155px]`}
-              style={{
-                "--delay": `${220 + index * 100}ms`,
-                top: card.top,
-                right: card.rightOffset, // Pinned to the farthest right
-                zIndex: active ? 100 : index + 1,
-                transform: `
-                  translate3d(${shiftX}px, ${shiftY}px, 0)
-                  rotate(${active ? 0 : card.angle})
-                  scale(${scale})
-                `,
-              }}
-            >
-              {/* Floating editorial caption badge on hover */}
-              <div
-                className={`pointer-events-none absolute right-[108%] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/20 bg-[#161b1c]/90 px-3.5 py-2 text-left shadow-2xl backdrop-blur-md transition-all duration-300 ${
-                  active
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 translate-x-3 pointer-events-none"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-semibold tracking-wider text-[#F0C49A]">
-                    {card.id}
-                  </span>
-                  <span className="h-1 w-1 rounded-full bg-white/40" />
-                  <p className="text-xs font-medium text-white tracking-wide">
-                    {card.title}
-                  </p>
-                </div>
-                <p className="text-[10px] text-white/60 tracking-wider mt-0.5">
-                  {card.location}
-                </p>
-              </div>
-
-              {/* Photo thumbnail */}
-              <div className="aspect-[3/4] overflow-hidden rounded-[11px] sm:rounded-[14px] border border-white/15 bg-[#121617] shadow-xl shadow-black/40">
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  loading="lazy"
-                  decoding="async"
-                  draggable="false"
-                  className="photo-img h-full w-full object-cover"
-                />
-              </div>
-            </article>
-          );
-        })}
-      </aside>
-      {/* ==================================================================== */}
-      {/* MOBILE & COMPACT SCREENS: Horizontal Interactive Gallery Rail         */}
-      {/* ==================================================================== */}
-      ```jsx
-      {/* MOBILE: Infinite Photography Carousel */}
-      <section
-        aria-label="Photography collection"
-        className="absolute bottom-16 sm:bottom-20 left-0 right-0 z-20 md:hidden overflow-hidden"
-      >
-        <div className="overflow-hidden py-2">
-          <div className="mobile-carousel-track flex w-max gap-3">
-            {/* Duplicate the cards for a seamless loop */}
-            {[...sceneryCards, ...sceneryCards].map((card, index) => (
-              <article
-                key={`${card.id}-${index}`}
-                className="relative flex-shrink-0 overflow-hidden rounded-[12px] border border-white/20 w-[84px] sm:w-[98px] aspect-[3/4]"
-              >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  loading="lazy"
-                  decoding="async"
-                  draggable="false"
-                  className="h-full w-full object-cover"
-                />
-              </article>
+                  target.dataset.fallback = "true";
+                  target.src = coverImage;
+                }}
+                className="absolute inset-0 h-full w-full scale-[1.04] object-cover"
+              />
             ))}
           </div>
-        </div>
-      </section>
-      ```
-      {/* Footer signature */}
-      <div className="pointer-events-none absolute bottom-5 sm:bottom-7 left-6 sm:left-12 lg:left-[9%] z-10">
-        <div className="flex flex-col items-start">
-          <p
-            lang="ne"
-            className="text-sm sm:text-base tracking-wide -rotate-3 origin-left"
-            style={{
-              fontFamily:
-                '"AMS Kashifont", "Tiro Devanagari Nepali", "Noto Serif Devanagari", serif',
-              color: "#E8C58F",
-              textShadow: "0 2px 12px rgba(0,0,0,0.35)",
-            }}
-          >
-            हरेक तस्बिरको आफ्नै कथा।
-          </p>
 
-          <div className="mt-2 ml-1 flex -rotate-3 flex-col gap-[4px]">
-            <div className="w-24 sm:w-28 border-t border-dashed border-[#E8C58F]/80" />
-            <div className="ml-5 w-16 sm:w-20 border-t border-dashed border-[#E8C58F]/50" />
+          {/* Bright Pinterest-inspired white overlay */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-white/[0.96] via-white/[0.84] to-white/[0.42]"
+          />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-white/[0.92] via-white/[0.12] to-white/[0.34]"
+          />
+
+          {/* Subtle Pinterest-red glow on the right */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 z-[3] hidden w-[55%] bg-[radial-gradient(ellipse_at_100%_50%,rgba(230,0,35,0.13)_0%,rgba(230,0,35,0.045)_35%,transparent_72%)] lg:block"
+          />
+
+          {/* Main hero content */}
+          <div className="relative z-10 flex h-full items-center px-6 sm:px-12 md:px-14 lg:pr-[220px] lg:pl-[8%] xl:pr-[280px] xl:pl-[9%]">
+            <motion.div
+              initial="hidden"
+              animate={loaded ? "visible" : "hidden"}
+              variants={heroContainerVariants}
+              className="w-full max-w-[620px] -translate-y-8 sm:max-w-[680px] sm:-translate-y-6 md:-translate-y-4 xl:max-w-[760px]"
+            >
+              <motion.p
+                variants={copyVariants}
+                className="mb-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#767676] sm:mb-6 sm:text-xs"
+              >
+                <span className="text-[9px] text-[#E60023]">●</span>A home for
+                every perspective
+              </motion.p>
+
+              <motion.h1
+                variants={copyVariants}
+                className={`${deva} m-0 mt-2 whitespace-nowrap text-[clamp(58px,10.5vw,148px)] font-normal leading-[1.12] tracking-[-0.045em] ${gradientText}`}
+              >
+                तस्बिरगंज
+              </motion.h1>
+
+              <motion.h2
+                variants={copyVariants}
+                className="max-w-[580px] text-[clamp(1.75rem,3.8vw,2.85rem)] font-medium leading-[1.15] tracking-[-0.035em] text-[#111111]"
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                }}
+              >
+                The world, through{" "}
+                <span className="italic text-[#E60023]">your lens.</span>
+              </motion.h2>
+
+              <motion.p
+                variants={copyVariants}
+                className="mt-4 max-w-[460px] text-xs leading-6 text-[#555555] sm:mt-5 sm:text-base sm:leading-7"
+              >
+                A moment. A feeling. A different perspective. Discover
+                extraordinary photographs and share the world as you see it.
+              </motion.p>
+
+              {/* Explore button */}
+              <motion.div
+                variants={copyVariants}
+                className="mt-7 flex flex-wrap items-stretch gap-3 sm:mt-9 sm:gap-4"
+              >
+                <Link
+                  to="/explore"
+                  className="group inline-flex min-h-[78px] items-center justify-between gap-5 rounded-2xl border border-[#E5E5E5] bg-white/95 px-5 py-3.5 text-left text-[#111111] shadow-[0_12px_38px_rgba(0,0,0,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-[#E60023]/35 hover:shadow-[0_16px_42px_rgba(0,0,0,0.13)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E60023] sm:px-6"
+                >
+                  <span className="flex flex-col items-start">
+                    <span
+                      className="text-[25px] font-semibold leading-none tracking-[-0.035em] sm:text-[28px]"
+                      style={{
+                        fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      }}
+                    >
+                      Explore तस्बिरगंज
+                    </span>
+
+                    <span className="mt-2 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#767676] sm:text-[10px] sm:tracking-[0.15em]">
+                      A world through the lens
+                    </span>
+                  </span>
+
+                  <span
+                    aria-hidden="true"
+                    className="flex h-[42px] w-[42px] shrink-0 items-center justify-center border-l border-[#E5E5E5] pl-3 text-[#E60023] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 sm:pl-4"
+                  >
+                    <ArrowUpRight size={20} strokeWidth={1.7} />
+                  </span>
+                </Link>
+              </motion.div>
+            </motion.div>
           </div>
-        </div>
-      </div>
-    </main>
+
+          {/* Desktop photography cascade */}
+          <aside
+            aria-label="Curated photography gallery"
+            className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-[220px] lg:block xl:w-[260px] 2xl:w-[280px]"
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            {sceneryCards.map((card, index) => {
+              const active = hoveredCard === index;
+              const anotherActive = hoveredCard !== null;
+
+              return (
+                <motion.article
+                  key={card.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${card.title} - ${card.location}`}
+                  aria-pressed={active}
+                  onMouseEnter={() => setHoveredCard(index)}
+                  onFocus={() => setHoveredCard(index)}
+                  onBlur={(event) => {
+                    if (
+                      !event.currentTarget.parentElement?.contains(
+                        event.relatedTarget,
+                      )
+                    ) {
+                      setHoveredCard(null);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setHoveredCard((current) =>
+                        current === index ? null : index,
+                      );
+                    }
+
+                    if (event.key === "Escape") {
+                      setHoveredCard(null);
+                    }
+                  }}
+                  onClick={() =>
+                    setHoveredCard((current) =>
+                      current === index ? null : index,
+                    )
+                  }
+                  initial={{
+                    opacity: 0,
+                    y: shouldReduceMotion ? 0 : 12,
+                  }}
+                  animate={{
+                    opacity: active ? 1 : 0.86,
+                    x: anotherActive ? (active ? -40 : 12) : 0,
+                    y: anotherActive && active ? -2 : 0,
+                    rotate: active ? 0 : card.angle,
+                    scale: anotherActive ? (active ? 1.1 : 0.94) : 1,
+                  }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.5,
+                    delay:
+                      !shouldReduceMotion && hoveredCard === null
+                        ? 0.22 + index * 0.1
+                        : 0,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={`pointer-events-auto absolute w-[95px] cursor-pointer rounded-[11px] outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E60023] lg:w-[120px] lg:rounded-[14px] xl:w-[140px] 2xl:w-[155px] ${
+                    active ? "grayscale-0" : "grayscale"
+                  }`}
+                  style={{
+                    top: card.top,
+                    right: card.right,
+                  }}
+                >
+                  {/* Floating photo caption */}
+                  <div
+                    className={`pointer-events-none absolute right-[108%] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl border border-[#E5E5E5] bg-white px-3.5 py-2.5 text-left text-[#111111] shadow-[0_12px_35px_rgba(0,0,0,0.10)] transition-all duration-300 ${
+                      active
+                        ? "translate-x-0 opacity-100"
+                        : "translate-x-3 opacity-0"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-semibold tracking-wider text-[#E60023]">
+                        {card.id}
+                      </span>
+
+                      <span className="h-1 w-1 rounded-full bg-current opacity-40" />
+
+                      <p className="text-xs font-medium tracking-wide">
+                        {card.title}
+                      </p>
+                    </div>
+
+                    <p className="mt-1 text-[10px] tracking-wider text-[#767676]">
+                      {card.location}
+                    </p>
+                  </div>
+
+                  <div className="pointer-events-none aspect-[3/4] overflow-hidden rounded-[11px] border border-white bg-white shadow-[0_16px_38px_rgba(0,0,0,0.16)] lg:rounded-[14px]">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                      className={`h-full w-full object-cover transition-transform duration-700 ${
+                        active ? "scale-110" : "scale-100"
+                      }`}
+                    />
+                  </div>
+                </motion.article>
+              );
+            })}
+          </aside>
+
+          {/* Mobile photography carousel */}
+          <section
+            aria-label="Photography collection"
+            className="absolute bottom-16 left-0 right-0 z-20 overflow-hidden sm:bottom-20 lg:hidden"
+          >
+            <div className="overflow-hidden py-3">
+              <motion.div
+                className="flex w-max gap-3"
+                animate={shouldReduceMotion ? { x: 0 } : { x: ["0%", "-50%"] }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : {
+                        duration: 30,
+                        ease: "linear",
+                        repeat: Infinity,
+                      }
+                }
+              >
+                {[...sceneryCards, ...sceneryCards].map((card, index) => (
+                  <article
+                    key={`${card.id}-${index}`}
+                    aria-hidden={index >= sceneryCards.length}
+                    className="relative aspect-[3/4] w-[84px] shrink-0 overflow-hidden rounded-xl border border-white bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] sm:w-[98px]"
+                  >
+                    <img
+                      src={card.image}
+                      alt={index < sceneryCards.length ? card.title : ""}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                      className="h-full w-full object-cover"
+                    />
+                  </article>
+                ))}
+              </motion.div>
+            </div>
+          </section>
+
+          {/* Nepali signature */}
+          <div className="pointer-events-none absolute bottom-5 left-6 z-10 sm:bottom-7 sm:left-12 lg:left-[9%]">
+            <div className="flex flex-col items-start">
+              <p
+                lang="ne"
+                className="origin-left -rotate-3 text-sm tracking-wide text-[#E60023] sm:text-base"
+                style={{
+                  fontFamily: "'Kalam', cursive",
+                }}
+              >
+                हरेक तस्बिरको आफ्नै कथा।
+              </p>
+
+              <div className="ml-1 mt-2 flex -rotate-3 flex-col gap-[4px]">
+                <div className="w-24 border-t border-dashed border-[#E5E5E5] sm:w-28" />
+                <div className="ml-5 w-16 border-t border-dashed border-[#E5E5E5] sm:w-20" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
