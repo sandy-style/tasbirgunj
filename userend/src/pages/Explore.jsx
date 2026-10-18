@@ -12,15 +12,19 @@ import {
   MessageCircle,
   Tag,
   ChevronDown,
-  Sparkles,
   Bookmark,
+  Sparkles,
+  RefreshCw,
+  Image as ImageIcon,
 } from "lucide-react";
 
+import { readFeedCache, writeFeedCache } from "../utils/feedCache";
 import PostGrid from "../components/post/PostGrid";
 import api from "../utils/api";
 import { API_ENDPOINTS } from "../utils/constants";
 
 const PAGE_SIZE = 30;
+const MAX_PAGES = 10;
 
 const CATEGORIES = [
   { value: "All", label: "All photographs" },
@@ -65,114 +69,6 @@ const SORT_OPTIONS = [
     label: "Oldest",
     description: "Explore earlier photographs",
     icon: Clock3,
-  },
-];
-
-const initialPosts = [
-  {
-    _id: "1",
-    image:
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85",
-    caption: "A quiet morning in the mountains.",
-    location: "Pokhara, Nepal",
-    category: "nature",
-    likesCount: 120,
-    author: {
-      name: "Sandy",
-      username: "sandyway",
-      profileImage:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80",
-    },
-  },
-  {
-    _id: "2",
-    image:
-      "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=85",
-    caption: "Somewhere between the stars and silence.",
-    location: "Himalayas, Nepal",
-    category: "mountains",
-    likesCount: 86,
-    author: { name: "Aarav", username: "aarav.frames", profileImage: "" },
-  },
-  {
-    _id: "3",
-    image:
-      "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1000&q=85",
-    caption: "Finding beauty in the lines.",
-    location: "Kathmandu, Nepal",
-    category: "architecture",
-    likesCount: 64,
-    author: { name: "Nisha", username: "nisha.visuals", profileImage: "" },
-  },
-  {
-    _id: "4",
-    image:
-      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1000&q=85",
-    caption: "A little reminder to slow down.",
-    location: "The wilderness",
-    category: "wildlife",
-    likesCount: 92,
-    author: { name: "Rohan", username: "rohan.capture", profileImage: "" },
-  },
-  {
-    _id: "5",
-    image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=85",
-    caption: "The kind of place you never forget.",
-    location: "Nepal",
-    category: "travel",
-    likesCount: 73,
-    author: { name: "Sandy", username: "sandyway", profileImage: "" },
-  },
-  {
-    _id: "6",
-    image:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1000&q=85",
-    caption: "People have stories the camera cannot tell.",
-    location: "Kathmandu, Nepal",
-    category: "people",
-    likesCount: 51,
-    author: { name: "Anish", username: "anish.films", profileImage: "" },
-  },
-  {
-    _id: "7",
-    image:
-      "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1000&q=85",
-    caption: "The city never really sleeps.",
-    location: "New York",
-    category: "street-photography",
-    likesCount: 108,
-    author: { name: "Milan", username: "milan.jpg", profileImage: "" },
-  },
-  {
-    _id: "8",
-    image:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=85",
-    caption: "Mountains that make you feel small.",
-    location: "Annapurna Region, Nepal",
-    category: "mountains",
-    likesCount: 143,
-    author: { name: "Aarav", username: "aarav.frames", profileImage: "" },
-  },
-  {
-    _id: "9",
-    image:
-      "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1000&q=85",
-    caption: "A little color in an ordinary day.",
-    location: "Pokhara, Nepal",
-    category: "nature",
-    likesCount: 45,
-    author: { name: "Nisha", username: "nisha.visuals", profileImage: "" },
-  },
-  {
-    _id: "10",
-    image:
-      "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=85",
-    caption: "Keep looking up.",
-    location: "Under the night sky",
-    category: "nature",
-    likesCount: 68,
-    author: { name: "Milan", username: "milan.jpg", profileImage: "" },
   },
 ];
 
@@ -223,15 +119,20 @@ function extractPagination(data) {
             ? item.hasNext
             : null;
 
-    const totalPages = Number(
-      item.totalPages ?? item.total_pages ?? item.pages,
-    );
+    const rawPages = item.totalPages ?? item.total_pages ?? item.pages;
+    const totalPages =
+      rawPages !== undefined && rawPages !== null ? Number(rawPages) : null;
 
-    if (hasMore !== null || (Number.isFinite(totalPages) && totalPages > 0)) {
+    if (
+      hasMore !== null ||
+      (totalPages !== null && Number.isFinite(totalPages) && totalPages > 0)
+    ) {
       return {
         hasMore,
         totalPages:
-          Number.isFinite(totalPages) && totalPages > 0 ? totalPages : null,
+          totalPages !== null && Number.isFinite(totalPages) && totalPages > 0
+            ? totalPages
+            : null,
       };
     }
   }
@@ -256,7 +157,6 @@ function getPostIdentity(post) {
   }
 
   const image = getPostImage(post);
-
   return image ? `image:${image}` : null;
 }
 
@@ -268,7 +168,6 @@ function getSavedIdentity(post) {
   }
 
   const image = getPostImage(post);
-
   return image ? `image:${image}` : null;
 }
 
@@ -304,13 +203,12 @@ function normalizeCategory(value) {
 }
 
 function getPostDate(post) {
-  const dateValue =
+  const value =
     post?.createdAt || post?.created_at || post?.publishedAt || post?.date;
 
-  if (!dateValue) return 0;
+  if (!value) return 0;
 
-  const timestamp = new Date(dateValue).getTime();
-
+  const timestamp = new Date(value).getTime();
   return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
@@ -324,7 +222,10 @@ function getLikeCount(post) {
   ];
 
   for (const value of candidates) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
     if (Array.isArray(value)) return value.length;
 
     if (value && typeof value === "object") {
@@ -346,7 +247,10 @@ function getCommentCount(post) {
   ];
 
   for (const value of candidates) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
     if (Array.isArray(value)) return value.length;
 
     if (value && typeof value === "object") {
@@ -408,11 +312,10 @@ function getSearchableText(post) {
     .toLowerCase();
 }
 
-function mergePosts(backendPosts = []) {
-  const source = backendPosts.length ? backendPosts : initialPosts;
+function mergePosts(posts = []) {
   const seen = new Set();
 
-  return source.filter((post) => {
+  return posts.filter((post) => {
     if (!post || typeof post !== "object") return false;
 
     const identity = getPostIdentity(post);
@@ -424,7 +327,7 @@ function mergePosts(backendPosts = []) {
   });
 }
 
-async function fetchAllBackendPosts() {
+async function fetchFirstBackendPage() {
   const endpoints = [
     API_ENDPOINTS?.POST?.FEED,
     "/api/post/feed",
@@ -439,66 +342,104 @@ async function fetchAllBackendPosts() {
   let lastError = null;
 
   for (const endpoint of endpoints) {
-    const collected = [];
-    const seen = new Set();
-    let endpointWorked = false;
-
-    for (let page = 1; page <= 1000; page += 1) {
-      let response;
-
-      try {
-        response = await api.get(endpoint, {
-          params: { page, limit: PAGE_SIZE },
-        });
-      } catch (error) {
-        lastError = error;
-        break;
-      }
+    try {
+      const response = await api.get(endpoint, {
+        params: { page: 1, limit: PAGE_SIZE },
+      });
 
       const batch = extractPosts(response?.data);
 
       if (!batch) {
         lastError = new Error(`Unexpected post response from ${endpoint}`);
-        break;
+        continue;
       }
 
-      endpointWorked = true;
+      return {
+        endpoint,
+        firstPage: batch,
+        firstResponse: response.data,
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
 
-      if (batch.length === 0) break;
+  throw lastError || new Error("Could not load the Explore feed.");
+}
 
-      let newPostsCount = 0;
+async function fetchRemainingBackendPages(
+  endpoint,
+  firstResponse,
+  firstPage,
+  onUpdate,
+) {
+  const collected = [...firstPage];
+  const seen = new Set(collected.map(getPostIdentity).filter(Boolean));
+
+  const publish = () => onUpdate(mergePosts(collected));
+  const initialPagination = extractPagination(firstResponse);
+
+  if (
+    initialPagination?.hasMore === false ||
+    (initialPagination?.totalPages && initialPagination.totalPages <= 1) ||
+    firstPage.length === 0
+  ) {
+    publish();
+    return collected;
+  }
+
+  for (let page = 2; page <= MAX_PAGES; page += 1) {
+    try {
+      const response = await api.get(endpoint, {
+        params: { page, limit: PAGE_SIZE },
+      });
+
+      const batch = extractPosts(response?.data);
+
+      if (!batch || batch.length === 0) break;
+
+      let added = 0;
 
       for (const post of batch) {
-        if (!post || typeof post !== "object") continue;
-
         const identity = getPostIdentity(post);
 
-        if (!identity || seen.has(identity)) continue;
+        if (!post || !identity || seen.has(identity)) continue;
 
         seen.add(identity);
         collected.push(post);
-        newPostsCount += 1;
+        added += 1;
       }
-
-      if (page > 1 && newPostsCount === 0) break;
 
       const pagination = extractPagination(response.data);
 
       if (pagination?.hasMore === false) break;
 
-      if (pagination?.totalPages && page >= pagination.totalPages) break;
+      if (pagination?.totalPages && page >= pagination.totalPages) {
+        break;
+      }
 
-      if (pagination?.hasMore === true) continue;
+      if (added === 0) break;
 
-      if (batch.length < PAGE_SIZE) break;
+      if (
+        (!pagination || pagination.hasMore === null) &&
+        !pagination?.totalPages &&
+        batch.length < PAGE_SIZE
+      ) {
+        break;
+      }
+
+      if (page % 3 === 0) publish();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn("Background feed pagination stopped.", error);
+      }
+
+      break;
     }
-
-    if (endpointWorked) return collected;
   }
 
-  if (lastError) throw lastError;
-
-  return [];
+  publish();
+  return collected;
 }
 
 function normalizeSavedIds(value) {
@@ -509,18 +450,161 @@ function normalizeSavedIds(value) {
     .map(String);
 }
 
+function FeedSkeleton() {
+  const cardHeights = [
+    "h-56",
+    "h-72",
+    "h-64",
+    "h-80",
+    "h-60",
+    "h-72",
+    "h-52",
+    "h-80",
+  ];
+
+  return (
+    <section
+      aria-label="Loading photographs"
+      aria-busy="true"
+      className="animate-in fade-in duration-500"
+    >
+      <div className="mb-7 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F0DDE0] bg-white">
+          <Camera size={17} className="animate-pulse text-[#E60023]" />
+        </div>
+
+        <div>
+          <p
+            className="text-lg italic text-[#202927]"
+            style={{ fontFamily: '"Cormorant Garamond", Georgia, serif' }}
+          >
+            Developing your collection
+          </p>
+          <p className="mt-0.5 text-[11px] tracking-wide text-[#7A827C]">
+            Gathering moments worth discovering
+          </p>
+        </div>
+      </div>
+
+      <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 xl:columns-5">
+        {cardHeights.map((height, index) => (
+          <div key={index} className="mb-4 break-inside-avoid">
+            <div
+              className={`relative ${height} overflow-hidden rounded-2xl border border-[#F0DDE0] bg-[#FFF0F2]`}
+            >
+              <div
+                className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#FFF8F8] via-[#FCEBED] to-[#FFF0F2]"
+                style={{ animationDelay: `${index * 100}ms` }}
+              />
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <div className="mb-2 h-2 w-2/3 animate-pulse rounded-full bg-[#F0DDE0]" />
+                <div className="h-2 w-1/3 animate-pulse rounded-full bg-[#F5E3E6]" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 px-1 pt-3">
+              <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-[#FCEBED]" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-2 w-2/5 animate-pulse rounded-full bg-[#F0DDE0]" />
+                <div className="h-2 w-3/5 animate-pulse rounded-full bg-[#F7ECEE]" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EmptyState({ savedCategory, onReset }) {
+  return (
+    <div className="flex min-h-[330px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#F0DDE0] bg-[#FDFEFC] px-6 py-14 text-center">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0F2] text-[#E60023]">
+        {savedCategory ? (
+          <Bookmark size={25} strokeWidth={1.6} />
+        ) : (
+          <ImageIcon size={26} strokeWidth={1.6} />
+        )}
+      </div>
+
+      <h2
+        lang="ne"
+        className="text-2xl font-normal text-[#202927]"
+        style={{ fontFamily: '"Noto Serif Devanagari", "Rozha One", serif' }}
+      >
+        {savedCategory
+          ? "अहिलेसम्म कुनै तस्बिर सुरक्षित छैन"
+          : "कुनै तस्बिर भेटिएन"}
+      </h2>
+
+      <p className="mt-3 max-w-sm text-sm leading-6 text-[#7A827C]">
+        {savedCategory
+          ? "Save photographs using the bookmark control on a post. They will appear here for you to revisit."
+          : "There are no photographs matching your current selection. Try another category or search."}
+      </p>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#F0DDE0] bg-white px-5 py-3 text-xs font-semibold text-[#E60023] transition hover:border-[#E60023] hover:bg-[#FFF0F2]"
+      >
+        <RotateCcw size={14} />
+        Explore photographs
+      </button>
+    </div>
+  );
+}
+
+function FeedError({ onRetry }) {
+  return (
+    <div className="flex min-h-[360px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#F0DDE0] bg-[#FDFEFC] px-6 py-14 text-center">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0F2] text-[#E60023]">
+        <Camera size={27} strokeWidth={1.6} />
+      </div>
+
+      <h2
+        className="text-3xl font-normal text-[#202927]"
+        style={{ fontFamily: '"Cormorant Garamond", Georgia, serif' }}
+      >
+        The collection is out of reach.
+      </h2>
+
+      <p className="mt-3 max-w-sm text-sm leading-6 text-[#7A827C]">
+        We couldn't connect to the photograph collection. Check your connection
+        and try again.
+      </p>
+
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#E60023] px-6 py-3 text-xs font-semibold text-white transition hover:bg-[#C9001F]"
+      >
+        <RefreshCw size={14} />
+        Try again
+      </button>
+    </div>
+  );
+}
+
 export default function Explore() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [posts, setPosts] = useState(() => shuffleArray(initialPosts));
+  const [posts, setPosts] = useState(() => {
+    const cached = readFeedCache();
+    return cached?.posts?.length ? cached.posts : [];
+  });
+
+  const [isLoading, setIsLoading] = useState(
+    () => !readFeedCache()?.posts?.length,
+  );
+
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy] = useState("random");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -531,32 +615,62 @@ export default function Explore() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadPosts = async () => {
-      setIsLoading(true);
+    async function loadPosts() {
+      const cached = readFeedCache();
+
+      if (cached?.posts?.length) {
+        setPosts(cached.posts);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
+
       setLoadError(false);
 
       try {
-        const backendPosts = await fetchAllBackendPosts();
+        const result = await fetchFirstBackendPage();
 
         if (cancelled) return;
 
-        setPosts(shuffleArray(mergePosts(backendPosts)));
+        const liveFirstPage = mergePosts(result.firstPage);
+        const combined = mergePosts([
+          ...liveFirstPage,
+          ...(cached?.posts || []),
+        ]);
+
+        writeFeedCache(combined);
+        setPosts(combined);
+        setIsLoading(false);
+
+        await fetchRemainingBackendPages(
+          result.endpoint,
+          result.firstResponse,
+          result.firstPage,
+          (updatedPosts) => {
+            if (cancelled) return;
+
+            const freshPosts = mergePosts(updatedPosts);
+
+            writeFeedCache(freshPosts);
+            setPosts(freshPosts);
+          },
+        );
       } catch (error) {
         if (cancelled) return;
 
-        setPosts(shuffleArray(initialPosts));
+        if (!cached?.posts?.length) {
+          setPosts([]);
+        }
+
         setLoadError(true);
 
         if (import.meta.env.DEV) {
-          console.warn(
-            "Unable to load Explore posts. Showing demo photographs.",
-            error,
-          );
+          console.warn("Unable to refresh the Explore feed.", error);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
-    };
+    }
 
     loadPosts();
 
@@ -572,11 +686,10 @@ export default function Explore() {
         JSON.stringify(savedPostIds),
       );
     } catch {
-      // Browser storage might be unavailable.
+      // Browser storage may be unavailable.
     }
   }, [savedPostIds]);
 
-  // A Saved Photographs category filters the same feed as every other category.
   const filteredPosts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const isSavedCategory = activeCategory === "saved";
@@ -650,16 +763,16 @@ export default function Explore() {
     );
   }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchQuery("");
     setActiveCategory("All");
     setSortBy("random");
-  };
+  }, []);
 
-  const refreshGallery = () => {
+  const refreshGallery = useCallback(() => {
     setRefreshKey((current) => current + 1);
     setSortBy("random");
-  };
+  }, []);
 
   const hasFilters = searchQuery.trim() !== "" || activeCategory !== "All";
 
@@ -673,18 +786,21 @@ export default function Explore() {
       ? "1 photograph"
       : `${sortedPosts.length} photographs`;
 
+  const showInitialLoading = isLoading && posts.length === 0;
+  const showInitialError = loadError && posts.length === 0 && !isLoading;
+
   return (
-    <main className="relative min-h-screen overflow-x-clip bg-white text-[#111111]">
+    <main className="relative min-h-screen overflow-x-clip bg-[#FDFEFC] text-[#202927]">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 overflow-hidden"
       >
-        <div className="absolute -right-48 -top-48 h-[420px] w-[420px] rounded-full bg-[#F7F7F7] blur-[120px]" />
-        <div className="absolute -left-48 top-1/3 h-[380px] w-[380px] rounded-full bg-[#FAFAFA] blur-[120px]" />
+        <div className="absolute -right-48 -top-48 h-[420px] w-[420px] rounded-full bg-[#FCEBED] opacity-60 blur-[120px]" />
+        <div className="absolute -left-48 top-1/3 h-[380px] w-[380px] rounded-full bg-[#FFF0F2] opacity-70 blur-[120px]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1720px] px-4 pb-16 pt-7 sm:px-8 sm:pt-10 lg:px-12">
-        <header className="relative mb-6 border-b border-[#E5E5E5] pb-5 sm:mb-7 sm:pb-6">
+        <header className="relative mb-6 border-b border-[#F0DDE0] pb-5 sm:mb-7 sm:pb-6">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E60023] sm:text-xs sm:tracking-[0.24em]">
@@ -692,14 +808,14 @@ export default function Explore() {
               </p>
 
               <h1
-                className="mt-2 text-3xl font-normal tracking-tight sm:text-4xl md:text-5xl"
+                className="mt-2 text-3xl font-normal tracking-tight text-[#202927] sm:text-4xl md:text-5xl"
                 style={{ fontFamily: '"Cormorant Garamond", Georgia, serif' }}
               >
                 Explore{" "}
                 <span className="italic text-[#E60023]">perspectives.</span>
               </h1>
 
-              <p className="mt-2 max-w-xl text-xs leading-6 text-[#767676] sm:text-sm">
+              <p className="mt-2 max-w-xl text-xs leading-6 text-[#7A827C] sm:text-sm">
                 Find places, moments, and stories through the eyes of
                 photographers.
               </p>
@@ -718,7 +834,7 @@ export default function Explore() {
                 className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
                   searchOpen
                     ? "border-[#E60023] bg-[#FFF0F2] text-[#E60023]"
-                    : "border-[#E5E5E5] bg-white hover:border-[#E60023] hover:text-[#E60023]"
+                    : "border-[#F0DDE0] bg-white hover:border-[#E60023] hover:text-[#E60023]"
                 }`}
               >
                 {searchOpen ? <X size={18} /> : <Search size={18} />}
@@ -736,7 +852,7 @@ export default function Explore() {
                 className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
                   showCategories
                     ? "border-[#E60023] bg-[#FFF0F2] text-[#E60023]"
-                    : "border-[#E5E5E5] bg-white hover:border-[#E60023] hover:text-[#E60023]"
+                    : "border-[#F0DDE0] bg-white hover:border-[#E60023] hover:text-[#E60023]"
                 }`}
               >
                 <Tag size={17} />
@@ -753,17 +869,17 @@ export default function Explore() {
             aria-hidden={!searchOpen}
           >
             <div className="overflow-hidden">
-              <div className="flex h-12 w-full min-w-0 items-center rounded-full border border-[#E5E5E5] bg-[#F7F7F7] px-4 transition-colors focus-within:border-[#767676] focus-within:bg-white">
+              <div className="flex h-12 w-full min-w-0 items-center rounded-full border border-[#F0DDE0] bg-[#FFF0F2] px-4 transition-colors focus-within:border-[#E60023] focus-within:bg-white">
                 <Search size={17} className="mr-3 shrink-0 text-[#E60023]" />
 
                 <input
                   type="search"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search captions, categories, places, creators..."
+                  placeholder="Search captions, places, creators..."
                   aria-label="Search all photographs"
                   tabIndex={searchOpen ? 0 : -1}
-                  className="h-full min-w-0 flex-1 bg-transparent text-sm text-[#111111] outline-none placeholder:text-[#767676]"
+                  className="h-full min-w-0 flex-1 bg-transparent text-sm text-[#202927] outline-none placeholder:text-[#929992]"
                 />
 
                 {searchQuery && (
@@ -771,16 +887,16 @@ export default function Explore() {
                     type="button"
                     onClick={() => setSearchQuery("")}
                     aria-label="Clear search"
-                    className="ml-2 shrink-0 rounded-full p-1 text-[#767676] hover:bg-[#E5E5E5] hover:text-[#111111]"
+                    className="ml-2 shrink-0 rounded-full p-1 text-[#7A827C] hover:bg-[#FCEBED] hover:text-[#202927]"
                   >
                     <X size={15} />
                   </button>
                 )}
               </div>
 
-              <p className="mt-2 px-4 text-[11px] leading-5 text-[#767676]">
-                Search by caption, location, category, photographer name,
-                username, tags, or available image descriptions.
+              <p className="mt-2 px-4 text-[11px] leading-5 text-[#7A827C]">
+                Search by caption, location, category, photographer, username,
+                or available tags.
               </p>
             </div>
           </div>
@@ -789,8 +905,8 @@ export default function Explore() {
         <section className="mb-5" aria-label="Photograph categories">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <SlidersHorizontal size={15} className="text-[#767676]" />
-              <p className="text-xs font-semibold text-[#333333]">
+              <SlidersHorizontal size={15} className="text-[#7A827C]" />
+              <p className="text-xs font-semibold text-[#202927]">
                 Browse by category
               </p>
             </div>
@@ -798,7 +914,7 @@ export default function Explore() {
             <button
               type="button"
               onClick={() => setShowCategories((open) => !open)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#E60023] hover:text-[#AD081B]"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#E60023] hover:text-[#C9001F]"
             >
               {showCategories ? "Show less" : "All categories"}
               <ChevronDown
@@ -826,17 +942,18 @@ export default function Explore() {
                   className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-xs font-medium transition-colors ${
                     active
                       ? "border-[#E60023] bg-[#E60023] text-white"
-                      : "border-[#E5E5E5] bg-white text-[#333333] hover:border-[#111111] hover:bg-[#F7F7F7]"
+                      : "border-[#F0DDE0] bg-white text-[#465149] hover:border-[#E60023] hover:bg-[#FFF0F2]"
                   }`}
                 >
                   {isSaved && <Bookmark size={14} />}
                   {category.label}
+
                   {isSaved && (
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[10px] ${
                         active
                           ? "bg-white/20 text-white"
-                          : "bg-[#FFF0F2] text-[#AD081B]"
+                          : "bg-[#FFF0F2] text-[#E60023]"
                       }`}
                     >
                       {savedPostIds.length}
@@ -848,18 +965,21 @@ export default function Explore() {
           </div>
         </section>
 
-        <section className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5E5] pb-4">
+        <section className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#F0DDE0] pb-4">
           <div className="flex min-w-0 items-center gap-2">
-            <p className="text-xs font-semibold text-[#111111]">{countLabel}</p>
+            <p className="text-xs font-semibold text-[#202927]">{countLabel}</p>
 
             {hasFilters && (
-              <span className="rounded-full bg-[#FFF0F2] px-2.5 py-1 text-[10px] font-medium text-[#AD081B]">
+              <span className="rounded-full bg-[#FFF0F2] px-2.5 py-1 text-[10px] font-medium text-[#E60023]">
                 Filtered
               </span>
             )}
 
-            {isLoading && (
-              <span className="text-xs text-[#767676]">Loading...</span>
+            {isLoading && posts.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#7A827C]">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E60023]" />
+                Updating
+              </span>
             )}
           </div>
 
@@ -873,16 +993,16 @@ export default function Explore() {
                   setSearchOpen(false);
                 }}
                 aria-expanded={showSortOptions}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#E5E5E5] bg-white px-3.5 text-xs font-semibold transition-colors hover:border-[#111111] sm:px-4"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#F0DDE0] bg-white px-3.5 text-xs font-semibold transition-colors hover:border-[#E60023] sm:px-4"
               >
                 <SelectedSortIcon size={15} className="text-[#E60023]" />
                 <span>{selectedSort.label}</span>
-                <ChevronDown size={14} className="text-[#767676]" />
+                <ChevronDown size={14} className="text-[#7A827C]" />
               </button>
 
               {showSortOptions && (
-                <div className="absolute right-0 top-full z-30 mt-2 w-[270px] rounded-2xl border border-[#E5E5E5] bg-white p-2 shadow-xl shadow-black/[0.08]">
-                  <p className="px-3 pb-2 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#767676]">
+                <div className="absolute right-0 top-full z-30 mt-2 w-[270px] rounded-2xl border border-[#F0DDE0] bg-white p-2 shadow-xl shadow-black/[0.08]">
+                  <p className="px-3 pb-2 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A827C]">
                     Sort photographs
                   </p>
 
@@ -899,14 +1019,14 @@ export default function Explore() {
                           setShowSortOptions(false);
                         }}
                         className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
-                          active ? "bg-[#FFF0F2]" : "hover:bg-[#F7F7F7]"
+                          active ? "bg-[#FFF0F2]" : "hover:bg-[#FDF7F8]"
                         }`}
                       >
                         <div
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                             active
                               ? "bg-[#E60023] text-white"
-                              : "bg-[#F7F7F7] text-[#555555]"
+                              : "bg-[#FCEBED] text-[#7A303A]"
                           }`}
                         >
                           <Icon size={16} />
@@ -915,12 +1035,12 @@ export default function Explore() {
                         <div className="min-w-0 flex-1">
                           <p
                             className={`text-xs font-semibold ${
-                              active ? "text-[#AD081B]" : "text-[#111111]"
+                              active ? "text-[#C9001F]" : "text-[#202927]"
                             }`}
                           >
                             {option.label}
                           </p>
-                          <p className="mt-1 text-[10px] leading-4 text-[#767676]">
+                          <p className="mt-1 text-[10px] leading-4 text-[#7A827C]">
                             {option.description}
                           </p>
                         </div>
@@ -942,8 +1062,8 @@ export default function Explore() {
               onClick={refreshGallery}
               disabled={isLoading}
               aria-label="Refresh gallery and shuffle photographs"
-              title="Refresh and shuffle photographs"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E5E5] bg-white text-[#555555] transition-colors hover:border-[#E60023] hover:text-[#E60023] disabled:opacity-50"
+              title="Refresh gallery"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#F0DDE0] bg-white text-[#7A303A] transition-colors hover:border-[#E60023] hover:text-[#E60023] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw
                 size={15}
@@ -955,13 +1075,13 @@ export default function Explore() {
 
         {hasFilters && (
           <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs text-[#767676]">Active filters</span>
+            <span className="mr-1 text-xs text-[#7A827C]">Active filters</span>
 
             {activeCategory !== "All" && (
               <button
                 type="button"
                 onClick={() => setActiveCategory("All")}
-                className="inline-flex items-center gap-2 rounded-full bg-[#FFF0F2] px-3 py-2 text-xs font-medium text-[#AD081B]"
+                className="inline-flex items-center gap-2 rounded-full bg-[#FFF0F2] px-3 py-2 text-xs font-medium text-[#E60023]"
               >
                 {CATEGORIES.find((item) => item.value === activeCategory)
                   ?.label || activeCategory}
@@ -973,7 +1093,7 @@ export default function Explore() {
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#F7F7F7] px-3 py-2 text-xs text-[#333333]"
+                className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#FCEBED] px-3 py-2 text-xs text-[#465149]"
               >
                 <span className="max-w-[180px] truncate">
                   “{searchQuery.trim()}”
@@ -993,61 +1113,36 @@ export default function Explore() {
           </div>
         )}
 
-        {sortedPosts.length > 0 ? (
-          <PostGrid
-            posts={sortedPosts}
-            onSelectPost={handleSelectPost}
-            onSave={handleSave}
-            savedPostIds={savedPostIds}
-            theme="light"
-          />
+        {showInitialLoading ? (
+          <FeedSkeleton />
+        ) : showInitialError ? (
+          <FeedError onRetry={refreshGallery} />
+        ) : sortedPosts.length > 0 ? (
+          <>
+            <PostGrid
+              posts={sortedPosts}
+              onSelectPost={handleSelectPost}
+              onSave={handleSave}
+              savedPostIds={savedPostIds}
+              theme="light"
+            />
+
+            {!isLoading && loadError && (
+              <p className="mt-6 text-center text-xs leading-5 text-[#7A827C]">
+                <Sparkles
+                  size={13}
+                  className="mr-1 inline-block text-[#E60023]"
+                />
+                Showing previously loaded photographs. The latest collection
+                could not be reached.
+              </p>
+            )}
+          </>
         ) : (
-          <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#E5E5E5] bg-[#FAFAFA] px-6 py-14 text-center">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0F2] text-[#E60023]">
-              {activeCategory === "saved" ? (
-                <Bookmark size={26} strokeWidth={1.7} />
-              ) : (
-                <Camera size={26} strokeWidth={1.7} />
-              )}
-            </div>
-
-            <h2
-              lang="ne"
-              className="text-2xl font-normal text-[#111111]"
-              style={{
-                fontFamily: '"Noto Serif Devanagari", "Rozha One", serif',
-              }}
-            >
-              {activeCategory === "saved"
-                ? "अहिलेसम्म कुनै तस्बिर सुरक्षित छैन"
-                : "कुनै तस्बिर भेटिएन"}
-            </h2>
-
-            <p className="mt-2 max-w-sm text-sm leading-6 text-[#767676]">
-              {activeCategory === "saved"
-                ? "Save photographs using the bookmark control on a post. They will appear here for you to revisit."
-                : "Try a different keyword or category to discover more photographs."}
-            </p>
-
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#E60023] px-6 py-3 text-xs font-semibold text-white transition-colors hover:bg-[#AD081B]"
-            >
-              <RotateCcw size={14} />
-              {activeCategory === "saved"
-                ? "Explore photographs"
-                : "Reset filters"}
-            </button>
-          </div>
-        )}
-
-        {!isLoading && loadError && (
-          <p className="mt-6 text-center text-xs leading-5 text-[#767676]">
-            <Sparkles size={13} className="mr-1 inline-block text-[#E60023]" />
-            Showing sample photographs because the server could not be reached.
-            Refresh to try loading the live collection again.
-          </p>
+          <EmptyState
+            savedCategory={activeCategory === "saved"}
+            onReset={resetFilters}
+          />
         )}
       </div>
     </main>
