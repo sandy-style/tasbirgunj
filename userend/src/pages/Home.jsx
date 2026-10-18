@@ -348,20 +348,20 @@ export default function Home() {
 
                       <span
                         lang="ne"
-                        className={`${deva} text-[23px] leading-none text-[#426D65] sm:text-[26px]`}
+                        className={`${deva} text-[23px] leading-none text-red-600 text-[26px]`}
                       >
                         तस्बिरगंज
                       </span>
                     </span>
 
-                    <span className="mt-2 text-[9px] font-semibold uppercase tracking-[0.19em] text-[#596B62] sm:text-[10px]">
+                    <span className="mt-2 text-[9px] font-semibold uppercase tracking-[0.19em] text-red-700 sm:text-[10px]">
                       A world through the lens
                     </span>
                   </span>
 
                   <span
                     aria-hidden="true"
-                    className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#426D65]/25 bg-white/45 text-[#426D65] transition-all duration-500 group-hover:border-[#426D65] group-hover:bg-[#426D65] group-hover:text-white sm:h-11 sm:w-11"
+                    className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#426D65]/25 bg-white/45 text-red-700 transition-all duration-500 group-hover:border-[#426D65] group-hover:bg-[#f11e1e] group-hover:text-white sm:h-11 sm:w-11"
                   >
                     <ArrowUpRight
                       size={21}
